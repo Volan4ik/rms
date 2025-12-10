@@ -53,16 +53,16 @@ curl -X POST http://localhost:8080/api/batch-import/products \
 ```
 
 ## Структура
-- `migrations/schema.sql` — DDL, функции, представления, триггеры, аудит.
-- `migrations/test_data.sql` — генерация 600+ продуктов, 550 блюд, 800 клиентов, 5000+ заказов.
-- `cmd/server` — точка входа.
-- `internal/config` — загрузка ENV.
-- `internal/db` — подключение PostgreSQL.
-- `internal/domain` — модели.
-- `internal/repository` — SQL-слой (только подготовленные запросы).
-- `internal/http` — роутер и обработчики.
-- `api/docs` — заглушка Swagger (можно пересобрать командой `swag init` при наличии swaggo).
-- `Dockerfile`, `docker-compose.yml` — контейнеризация.
+- `migrations/schema.sql` — DDL, функции, представления, триггеры, аудит
+- `migrations/test_data.sql` — генерации
+- `cmd/server` — точка входа
+- `internal/config` — загрузка ENV
+- `internal/db` — подключение PostgreSQL
+- `internal/domain` — модели
+- `internal/repository` — SQL-слой
+- `internal/http` — роутер и обработчики
+- `api/docs` — заглушка Swagger
+- `Dockerfile`, `docker-compose.yml` — контейнеризация
 
 ## Безопасность и ограничения
 - Секреты только через переменные окружения, в коде отсутствуют пароли/URI.
