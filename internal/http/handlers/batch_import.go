@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -25,7 +24,7 @@ func RegisterBatchImport(r *gin.RouterGroup, h *Handler) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} map[string]int
-// @Router /api/batch-import/products [post]
+// @Router /batch-import/products [post]
 func (h *Handler) batchImportProducts(c *gin.Context) {
 	var products []domain.Product
 	ct := c.GetHeader("Content-Type")

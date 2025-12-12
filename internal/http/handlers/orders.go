@@ -27,7 +27,7 @@ func RegisterOrders(r *gin.RouterGroup, h *Handler) {
 // @Param status query string false "status filter"
 // @Param limit query int false "limit"
 // @Success 200 {array} domain.Order
-// @Router /api/orders [get]
+// @Router /orders [get]
 func (h *Handler) listOrders(c *gin.Context) {
 	status := c.Query("status")
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
@@ -56,7 +56,7 @@ type orderRequest struct {
 // @Produce json
 // @Param order body orderRequest true "order"
 // @Success 201 {object} domain.Order
-// @Router /api/orders [post]
+// @Router /orders [post]
 func (h *Handler) createOrder(c *gin.Context) {
 	var req orderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -91,7 +91,7 @@ func (h *Handler) createOrder(c *gin.Context) {
 // @Param id path int true "order id"
 // @Param status query string true "new status"
 // @Success 200
-// @Router /api/orders/{id}/status [put]
+// @Router /orders/{id}/status [put]
 func (h *Handler) updateOrderStatus(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {
@@ -115,7 +115,7 @@ func (h *Handler) updateOrderStatus(c *gin.Context) {
 // @Param id path int true "order id"
 // @Produce json
 // @Success 200 {array} domain.OrderItem
-// @Router /api/orders/{id}/items [get]
+// @Router /orders/{id}/items [get]
 func (h *Handler) listOrderItems(c *gin.Context) {
 	orderID, ok := parseID(c, "id")
 	if !ok {
@@ -137,7 +137,7 @@ func (h *Handler) listOrderItems(c *gin.Context) {
 // @Produce json
 // @Param item body domain.OrderItem true "item"
 // @Success 200
-// @Router /api/orders/{id}/items [post]
+// @Router /orders/{id}/items [post]
 func (h *Handler) addOrderItem(c *gin.Context) {
 	orderID, ok := parseID(c, "id")
 	if !ok {
@@ -165,7 +165,7 @@ func (h *Handler) addOrderItem(c *gin.Context) {
 // @Param id path int true "order id"
 // @Param itemId path int true "item id"
 // @Success 204
-// @Router /api/orders/{id}/items/{itemId} [delete]
+// @Router /orders/{id}/items/{itemId} [delete]
 func (h *Handler) deleteOrderItem(c *gin.Context) {
 	itemID, ok := parseID(c, "itemId")
 	if !ok {

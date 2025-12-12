@@ -1,0 +1,12 @@
+# Environment and local configs
+.env
+
+# Go build artifacts
+bin/
+*.exe
+*.test
+*.out
+*.log
+
+# Vendor / modules cache (optional)
+/vendor/

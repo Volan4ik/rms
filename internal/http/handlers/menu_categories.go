@@ -22,7 +22,7 @@ func RegisterMenuCategories(r *gin.RouterGroup, h *Handler) {
 // @Tags menu-categories
 // @Produce json
 // @Success 200 {array} domain.MenuCategory
-// @Router /api/menu-categories [get]
+// @Router /menu-categories [get]
 func (h *Handler) listMenuCategories(c *gin.Context) {
 	cats, err := h.Repo.ListMenuCategories(c.Request.Context())
 	if err != nil {
@@ -39,7 +39,7 @@ func (h *Handler) listMenuCategories(c *gin.Context) {
 // @Produce json
 // @Param category body domain.MenuCategory true "category"
 // @Success 200 {object} domain.MenuCategory
-// @Router /api/menu-categories [post]
+// @Router /menu-categories [post]
 func (h *Handler) upsertMenuCategory(c *gin.Context) {
 	var req domain.MenuCategory
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -62,7 +62,7 @@ func (h *Handler) upsertMenuCategory(c *gin.Context) {
 // @Tags menu-categories
 // @Param id path int true "category id"
 // @Success 204
-// @Router /api/menu-categories/{id} [delete]
+// @Router /menu-categories/{id} [delete]
 func (h *Handler) deleteMenuCategory(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {

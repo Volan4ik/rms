@@ -23,7 +23,7 @@ func RegisterReservations(r *gin.RouterGroup, h *Handler) {
 // @Produce json
 // @Param status query string false "status filter"
 // @Success 200 {array} domain.Reservation
-// @Router /api/reservations [get]
+// @Router /reservations [get]
 func (h *Handler) listReservations(c *gin.Context) {
 	status := c.Query("status")
 	reservations, err := h.Repo.ListReservations(c.Request.Context(), status)
@@ -41,7 +41,7 @@ func (h *Handler) listReservations(c *gin.Context) {
 // @Produce json
 // @Param reservation body domain.Reservation true "reservation"
 // @Success 201 {object} domain.Reservation
-// @Router /api/reservations [post]
+// @Router /reservations [post]
 func (h *Handler) createReservation(c *gin.Context) {
 	var req domain.Reservation
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -65,7 +65,7 @@ func (h *Handler) createReservation(c *gin.Context) {
 // @Param id path int true "reservation id"
 // @Param status query string true "new status"
 // @Success 200
-// @Router /api/reservations/{id}/status [put]
+// @Router /reservations/{id}/status [put]
 func (h *Handler) updateReservationStatus(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {
@@ -88,7 +88,7 @@ func (h *Handler) updateReservationStatus(c *gin.Context) {
 // @Tags reservations
 // @Param id path int true "reservation id"
 // @Success 204
-// @Router /api/reservations/{id} [delete]
+// @Router /reservations/{id} [delete]
 func (h *Handler) deleteReservation(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {

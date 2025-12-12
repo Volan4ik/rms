@@ -22,7 +22,7 @@ func RegisterCustomers(r *gin.RouterGroup, h *Handler) {
 // @Tags customers
 // @Produce json
 // @Success 200 {array} domain.Customer
-// @Router /api/customers [get]
+// @Router /customers [get]
 func (h *Handler) listCustomers(c *gin.Context) {
 	customers, err := h.Repo.ListCustomers(c.Request.Context())
 	if err != nil {
@@ -39,7 +39,7 @@ func (h *Handler) listCustomers(c *gin.Context) {
 // @Produce json
 // @Param customer body domain.Customer true "customer"
 // @Success 201 {object} domain.Customer
-// @Router /api/customers [post]
+// @Router /customers [post]
 func (h *Handler) createCustomer(c *gin.Context) {
 	var req domain.Customer
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -65,7 +65,7 @@ func (h *Handler) createCustomer(c *gin.Context) {
 // @Param id path int true "customer id"
 // @Param customer body domain.Customer true "customer"
 // @Success 200 {object} domain.Customer
-// @Router /api/customers/{id} [put]
+// @Router /customers/{id} [put]
 func (h *Handler) updateCustomer(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {
@@ -89,7 +89,7 @@ func (h *Handler) updateCustomer(c *gin.Context) {
 // @Tags customers
 // @Param id path int true "customer id"
 // @Success 204
-// @Router /api/customers/{id} [delete]
+// @Router /customers/{id} [delete]
 func (h *Handler) deleteCustomer(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {

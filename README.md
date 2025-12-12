@@ -3,10 +3,15 @@
 Курсовой проект по предмету «Базы данных»: управление рестораном (зал, заказы, склад).
 
 ## Запуск через Docker Compose
-1. Установите переменные окружения (минимум `DB_PASSWORD`). По умолчанию используются:
-   - `DB_USER=postgres`
-   - `DB_PASSWORD=postgres`
-   - `DB_NAME=rms`
+1. Создайте `.env` или экспортируйте переменные окружения. Пример `.env`:
+   ```
+   DB_USER=postgres
+   DB_PASSWORD=postgres
+   DB_NAME=rms
+   DB_HOST=db
+   DB_PORT=5432
+   HTTP_PORT=8080
+   ```
 2. Соберите и запустите:  
    ```sh
    docker-compose up --build
@@ -14,13 +19,12 @@
    PostgreSQL прогружает миграции из `migrations/schema.sql` и тестовые данные `migrations/test_data.sql` автоматически.
 
 ## Ручной запуск без Docker
-1. Создайте БД PostgreSQL и примените миграции:
+1. Создайте `.env` или экспортируйте переменные среды, затем создайте = PostgreSQL и примените миграции:
    ```sh
    psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f migrations/schema.sql
    psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f migrations/test_data.sql
    ```
-2. Экспортируйте переменные окружения (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `HTTP_PORT`).
-3. Запустите сервер:
+2. Запустите сервер:
    ```sh
    go run ./cmd/server
    ```
@@ -28,6 +32,7 @@
 ## Swagger / API
 - Swagger UI: `http://localhost:8080/swagger/index.html`
 - Базовый health-check: `GET /health`
+- Базовый путь API: `/api` (в Swagger пути указаны без префикса `/api`, например `/dishes`, `/orders`, `/batch-import/products`).
 - Основные эндпоинты (JSON):
   - `GET/POST/PUT/DELETE /api/customers`
   - `GET/POST/PUT/DELETE /api/employees`
@@ -50,7 +55,12 @@ curl -X POST http://localhost:8080/api/customers \
 curl -X POST http://localhost:8080/api/batch-import/products \
   -H "Content-Type: application/json" \
   -d '[{"name":"New product","unit":"pcs","cost_price":10.5,"is_available":true}]'
+
+curl "http://localhost:8080/api/dishes?limit=5"
+curl "http://localhost:8080/health"
 ```
+
+Swagger обновление (после правок комментариев): `swag init -g cmd/server/main.go -o api/docs`.
 
 ## Структура
 - `migrations/schema.sql` — DDL, функции, представления, триггеры, аудит

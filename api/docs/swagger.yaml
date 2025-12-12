@@ -1,0 +1,862 @@
+basePath: /api
+definitions:
+  domain.Customer:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: integer
+      phone:
+        type: string
+      vip_level:
+        type: integer
+    type: object
+  domain.Dish:
+    properties:
+      category_id:
+        type: integer
+      cook_time_minutes:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  domain.DishAvailability:
+    properties:
+      all_products_available:
+        type: boolean
+      can_be_ordered:
+        type: boolean
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  domain.Employee:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      hired_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      phone:
+        type: string
+      role_id:
+        type: integer
+    type: object
+  domain.MenuCategory:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      sort_order:
+        type: integer
+    type: object
+  domain.Order:
+    properties:
+      created_at:
+        type: string
+      customer_id:
+        type: integer
+      id:
+        type: integer
+      reservation_id:
+        type: integer
+      shift_id:
+        type: integer
+      status:
+        type: string
+      table_id:
+        type: integer
+      waiter_id:
+        type: integer
+    type: object
+  domain.OrderItem:
+    properties:
+      comment:
+        type: string
+      dish_id:
+        type: integer
+      id:
+        type: integer
+      order_id:
+        type: integer
+      price_at_moment:
+        type: number
+      quantity:
+        type: integer
+    type: object
+  domain.Payment:
+    properties:
+      amount:
+        type: number
+      id:
+        type: integer
+      method:
+        type: string
+      order_id:
+        type: integer
+      paid_at:
+        type: string
+      status:
+        type: string
+    type: object
+  domain.Product:
+    properties:
+      cost_price:
+        type: number
+      id:
+        type: integer
+      is_available:
+        type: boolean
+      name:
+        type: string
+      unit:
+        type: string
+    type: object
+  domain.Reservation:
+    properties:
+      created_at:
+        type: string
+      customer_id:
+        type: integer
+      id:
+        type: integer
+      reserved_from:
+        type: string
+      reserved_to:
+        type: string
+      status:
+        type: string
+      table_id:
+        type: integer
+    type: object
+  domain.RestaurantTable:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      seats:
+        type: integer
+      table_number:
+        type: integer
+    type: object
+  domain.ShiftRevenue:
+    properties:
+      avg_check:
+        type: number
+      closed_at:
+        type: string
+      opened_at:
+        type: string
+      orders_count:
+        type: integer
+      shift_id:
+        type: integer
+      total_revenue:
+        type: number
+    type: object
+  domain.WaiterPerformance:
+    properties:
+      avg_check:
+        type: number
+      full_name:
+        type: string
+      orders_count:
+        type: integer
+      total_revenue:
+        type: number
+      waiter_id:
+        type: integer
+    type: object
+  handlers.orderRequest:
+    properties:
+      customer_id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/domain.OrderItem'
+        type: array
+      reservation_id:
+        type: integer
+      shift_id:
+        type: integer
+      status:
+        type: string
+      table_id:
+        type: integer
+      waiter_id:
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: REST API for restaurant hall, orders, and warehouse management
+  title: Restaurant Management System API
+  version: "1.0"
+paths:
+  /api/batch-import/products:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+      summary: Batch import products from JSON array or CSV (name,unit,cost_price,is_available)
+      tags:
+      - batch-import
+  /api/customers:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Customer'
+            type: array
+      summary: List customers
+      tags:
+      - customers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: customer
+        in: body
+        name: customer
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Customer'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Customer'
+      summary: Create customer
+      tags:
+      - customers
+  /api/customers/{id}:
+    delete:
+      parameters:
+      - description: customer id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete customer
+      tags:
+      - customers
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: customer id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: customer
+        in: body
+        name: customer
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Customer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Customer'
+      summary: Update customer
+      tags:
+      - customers
+  /api/dishes:
+    get:
+      parameters:
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Dish'
+            type: array
+      summary: List dishes
+      tags:
+      - dishes
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: dish
+        in: body
+        name: dish
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Dish'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Dish'
+      summary: Create or update dish
+      tags:
+      - dishes
+  /api/dishes/{id}:
+    delete:
+      parameters:
+      - description: dish id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete dish
+      tags:
+      - dishes
+  /api/employees:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Employee'
+            type: array
+      summary: List employees
+      tags:
+      - employees
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: employee
+        in: body
+        name: employee
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Employee'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Employee'
+      summary: Create employee
+      tags:
+      - employees
+  /api/employees/{id}:
+    delete:
+      parameters:
+      - description: employee id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete employee
+      tags:
+      - employees
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: employee id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: employee
+        in: body
+        name: employee
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Employee'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Employee'
+      summary: Update employee
+      tags:
+      - employees
+  /api/menu-categories:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.MenuCategory'
+            type: array
+      summary: List menu categories
+      tags:
+      - menu-categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: category
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/domain.MenuCategory'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.MenuCategory'
+      summary: Create or update menu category
+      tags:
+      - menu-categories
+  /api/menu-categories/{id}:
+    delete:
+      parameters:
+      - description: category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete menu category
+      tags:
+      - menu-categories
+  /api/orders:
+    get:
+      parameters:
+      - description: status filter
+        in: query
+        name: status
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Order'
+            type: array
+      summary: List orders
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: order
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.orderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Order'
+      summary: Create order with items
+      tags:
+      - orders
+  /api/orders/{id}/items:
+    get:
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.OrderItem'
+            type: array
+      summary: List items for order
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: item
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/domain.OrderItem'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Add or update order item
+      tags:
+      - orders
+  /api/orders/{id}/items/{itemId}:
+    delete:
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: item id
+        in: path
+        name: itemId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete order item
+      tags:
+      - orders
+  /api/orders/{id}/status:
+    put:
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: new status
+        in: query
+        name: status
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      summary: Update order status
+      tags:
+      - orders
+  /api/payments:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: payment
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Payment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Payment'
+      summary: Create or update payment
+      tags:
+      - payments
+  /api/payments/{orderId}:
+    delete:
+      parameters:
+      - description: order id
+        in: path
+        name: orderId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete payment by order id
+      tags:
+      - payments
+  /api/products:
+    get:
+      parameters:
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Product'
+            type: array
+      summary: List products
+      tags:
+      - products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: product
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Product'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Product'
+      summary: Create or update product
+      tags:
+      - products
+  /api/products/{id}:
+    delete:
+      parameters:
+      - description: product id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete product
+      tags:
+      - products
+  /api/reports/dishes-availability:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.DishAvailability'
+            type: array
+      summary: Dishes availability
+      tags:
+      - reports
+  /api/reports/shift-revenue:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.ShiftRevenue'
+            type: array
+      summary: Shift revenue view
+      tags:
+      - reports
+  /api/reports/waiters:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.WaiterPerformance'
+            type: array
+      summary: Waiter performance
+      tags:
+      - reports
+  /api/reservations:
+    get:
+      parameters:
+      - description: status filter
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Reservation'
+            type: array
+      summary: List reservations
+      tags:
+      - reservations
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: reservation
+        in: body
+        name: reservation
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Reservation'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Reservation'
+      summary: Create reservation
+      tags:
+      - reservations
+  /api/reservations/{id}:
+    delete:
+      parameters:
+      - description: reservation id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete reservation
+      tags:
+      - reservations
+  /api/reservations/{id}/status:
+    put:
+      parameters:
+      - description: reservation id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: new status
+        in: query
+        name: status
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      summary: Update reservation status
+      tags:
+      - reservations
+  /api/tables:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.RestaurantTable'
+            type: array
+      summary: List restaurant tables
+      tags:
+      - tables
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: table
+        in: body
+        name: table
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RestaurantTable'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.RestaurantTable'
+      summary: Create or update restaurant table
+      tags:
+      - tables
+  /api/tables/{id}:
+    delete:
+      parameters:
+      - description: table id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete restaurant table
+      tags:
+      - tables
+swagger: "2.0"

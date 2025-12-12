@@ -22,7 +22,7 @@ func RegisterTables(r *gin.RouterGroup, h *Handler) {
 // @Tags tables
 // @Produce json
 // @Success 200 {array} domain.RestaurantTable
-// @Router /api/tables [get]
+// @Router /tables [get]
 func (h *Handler) listTables(c *gin.Context) {
 	tables, err := h.Repo.ListTables(c.Request.Context())
 	if err != nil {
@@ -39,7 +39,7 @@ func (h *Handler) listTables(c *gin.Context) {
 // @Produce json
 // @Param table body domain.RestaurantTable true "table"
 // @Success 200 {object} domain.RestaurantTable
-// @Router /api/tables [post]
+// @Router /tables [post]
 func (h *Handler) upsertTable(c *gin.Context) {
 	var req domain.RestaurantTable
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -62,7 +62,7 @@ func (h *Handler) upsertTable(c *gin.Context) {
 // @Tags tables
 // @Param id path int true "table id"
 // @Success 204
-// @Router /api/tables/{id} [delete]
+// @Router /tables/{id} [delete]
 func (h *Handler) deleteTable(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {

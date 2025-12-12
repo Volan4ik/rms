@@ -24,7 +24,7 @@ func RegisterProducts(r *gin.RouterGroup, h *Handler) {
 // @Produce json
 // @Param limit query int false "limit"
 // @Success 200 {array} domain.Product
-// @Router /api/products [get]
+// @Router /products [get]
 func (h *Handler) listProducts(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "200"))
 	products, err := h.Repo.ListProducts(c.Request.Context(), limit)
@@ -42,7 +42,7 @@ func (h *Handler) listProducts(c *gin.Context) {
 // @Produce json
 // @Param product body domain.Product true "product"
 // @Success 200 {object} domain.Product
-// @Router /api/products [post]
+// @Router /products [post]
 func (h *Handler) upsertProduct(c *gin.Context) {
 	var req domain.Product
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -65,7 +65,7 @@ func (h *Handler) upsertProduct(c *gin.Context) {
 // @Tags products
 // @Param id path int true "product id"
 // @Success 204
-// @Router /api/products/{id} [delete]
+// @Router /products/{id} [delete]
 func (h *Handler) deleteProduct(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {

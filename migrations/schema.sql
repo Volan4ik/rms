@@ -164,6 +164,7 @@ CREATE INDEX IF NOT EXISTS idx_reservations_customer_id ON reservations(customer
 CREATE INDEX IF NOT EXISTS idx_reservations_table_id ON reservations(table_id);
 CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
 CREATE INDEX IF NOT EXISTS idx_reservations_created_at ON reservations(created_at);
+CREATE INDEX IF NOT EXISTS idx_reservations_time ON reservations(reserved_from, reserved_to);
 CREATE INDEX IF NOT EXISTS idx_shifts_opened_by ON shifts(opened_by);
 CREATE INDEX IF NOT EXISTS idx_shifts_closed_by ON shifts(closed_by);
 CREATE INDEX IF NOT EXISTS idx_shifts_status ON shifts(status);

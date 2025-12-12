@@ -22,7 +22,7 @@ func RegisterEmployees(r *gin.RouterGroup, h *Handler) {
 // @Tags employees
 // @Produce json
 // @Success 200 {array} domain.Employee
-// @Router /api/employees [get]
+// @Router /employees [get]
 func (h *Handler) listEmployees(c *gin.Context) {
 	employees, err := h.Repo.ListEmployees(c.Request.Context())
 	if err != nil {
@@ -39,7 +39,7 @@ func (h *Handler) listEmployees(c *gin.Context) {
 // @Produce json
 // @Param employee body domain.Employee true "employee"
 // @Success 201 {object} domain.Employee
-// @Router /api/employees [post]
+// @Router /employees [post]
 func (h *Handler) createEmployee(c *gin.Context) {
 	var req domain.Employee
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -65,7 +65,7 @@ func (h *Handler) createEmployee(c *gin.Context) {
 // @Param id path int true "employee id"
 // @Param employee body domain.Employee true "employee"
 // @Success 200 {object} domain.Employee
-// @Router /api/employees/{id} [put]
+// @Router /employees/{id} [put]
 func (h *Handler) updateEmployee(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {
@@ -89,7 +89,7 @@ func (h *Handler) updateEmployee(c *gin.Context) {
 // @Tags employees
 // @Param id path int true "employee id"
 // @Success 204
-// @Router /api/employees/{id} [delete]
+// @Router /employees/{id} [delete]
 func (h *Handler) deleteEmployee(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {

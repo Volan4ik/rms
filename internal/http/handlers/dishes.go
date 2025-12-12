@@ -24,7 +24,7 @@ func RegisterDishes(r *gin.RouterGroup, h *Handler) {
 // @Produce json
 // @Param limit query int false "limit"
 // @Success 200 {array} domain.Dish
-// @Router /api/dishes [get]
+// @Router /dishes [get]
 func (h *Handler) listDishes(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
 	dishes, err := h.Repo.ListDishes(c.Request.Context(), limit)
@@ -42,7 +42,7 @@ func (h *Handler) listDishes(c *gin.Context) {
 // @Produce json
 // @Param dish body domain.Dish true "dish"
 // @Success 200 {object} domain.Dish
-// @Router /api/dishes [post]
+// @Router /dishes [post]
 func (h *Handler) upsertDish(c *gin.Context) {
 	var req domain.Dish
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -65,7 +65,7 @@ func (h *Handler) upsertDish(c *gin.Context) {
 // @Tags dishes
 // @Param id path int true "dish id"
 // @Success 204
-// @Router /api/dishes/{id} [delete]
+// @Router /dishes/{id} [delete]
 func (h *Handler) deleteDish(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {

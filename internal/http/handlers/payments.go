@@ -23,7 +23,7 @@ func RegisterPayments(r *gin.RouterGroup, h *Handler) {
 // @Produce json
 // @Param payment body domain.Payment true "payment"
 // @Success 200 {object} domain.Payment
-// @Router /api/payments [post]
+// @Router /payments [post]
 func (h *Handler) upsertPayment(c *gin.Context) {
 	var req domain.Payment
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -52,7 +52,7 @@ func (h *Handler) upsertPayment(c *gin.Context) {
 // @Tags payments
 // @Param orderId path int true "order id"
 // @Success 204
-// @Router /api/payments/{orderId} [delete]
+// @Router /payments/{orderId} [delete]
 func (h *Handler) deletePayment(c *gin.Context) {
 	orderID, ok := parseID(c, "orderId")
 	if !ok {
