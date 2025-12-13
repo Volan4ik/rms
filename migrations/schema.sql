@@ -149,13 +149,51 @@ CREATE TABLE IF NOT EXISTS import_errors (
     error_message TEXT NOT NULL
 );
 
+-- Extensions
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+-- Additional constraints and computed columns
+ALTER TABLE IF EXISTS reservations
+    ADD COLUMN IF NOT EXISTS reserved_range tsrange
+        GENERATED ALWAYS AS (tsrange(reserved_from, reserved_to, '[)')) STORED;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'reservations_no_overlap'
+          AND conrelid = 'reservations'::regclass
+    ) THEN
+        ALTER TABLE reservations
+        ADD CONSTRAINT reservations_no_overlap
+        EXCLUDE USING gist (
+            table_id WITH =,
+            reserved_range WITH &&
+        );
+    END IF;
+END;
+$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'chk_products_unit'
+          AND conrelid = 'products'::regclass
+    ) THEN
+        ALTER TABLE products
+        ADD CONSTRAINT chk_products_unit
+        CHECK (unit IN ('kg', 'l', 'pcs'));
+    END IF;
+END;
+$$;
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_employees_role_id ON employees(role_id);
 CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
 CREATE INDEX IF NOT EXISTS idx_customers_created_at ON customers(created_at);
 CREATE INDEX IF NOT EXISTS idx_tables_active ON restaurant_tables(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_available ON products(is_available);
-CREATE INDEX IF NOT EXISTS idx_product_stock_product_id ON product_stock(product_id);
 CREATE INDEX IF NOT EXISTS idx_dishes_category_id ON dishes(category_id);
 CREATE INDEX IF NOT EXISTS idx_dishes_active ON dishes(is_active);
 CREATE INDEX IF NOT EXISTS idx_dish_ingredients_dish_id ON dish_ingredients(dish_id);
@@ -168,6 +206,7 @@ CREATE INDEX IF NOT EXISTS idx_reservations_time ON reservations(reserved_from, 
 CREATE INDEX IF NOT EXISTS idx_shifts_opened_by ON shifts(opened_by);
 CREATE INDEX IF NOT EXISTS idx_shifts_closed_by ON shifts(closed_by);
 CREATE INDEX IF NOT EXISTS idx_shifts_status ON shifts(status);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_shifts_single_open ON shifts ((status)) WHERE status = 'opened';
 CREATE INDEX IF NOT EXISTS idx_orders_table_id ON orders(table_id);
 CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);
 CREATE INDEX IF NOT EXISTS idx_orders_waiter_id ON orders(waiter_id);
@@ -180,6 +219,10 @@ CREATE INDEX IF NOT EXISTS idx_order_items_dish_id ON order_items(dish_id);
 CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 CREATE INDEX IF NOT EXISTS idx_payments_paid_at ON payments(paid_at);
+CREATE INDEX IF NOT EXISTS idx_audit_log_table_name ON audit_log(table_name, record_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_changed_at ON audit_log(changed_at);
+CREATE INDEX IF NOT EXISTS idx_import_errors_created_at ON import_errors(created_at);
+CREATE INDEX IF NOT EXISTS idx_import_errors_entity ON import_errors(entity);
 
 -- Functions and triggers
 
@@ -207,7 +250,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger bindings for availability
+CREATE OR REPLACE FUNCTION fn_product_stock_set_updated_at() RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at := now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger bindings for product_stock
+DROP TRIGGER IF EXISTS trg_product_stock_set_updated_at ON product_stock;
+CREATE TRIGGER trg_product_stock_set_updated_at
+BEFORE UPDATE ON product_stock
+FOR EACH ROW EXECUTE FUNCTION fn_product_stock_set_updated_at();
+
 DROP TRIGGER IF EXISTS trg_product_stock_update ON product_stock;
 CREATE TRIGGER trg_product_stock_update
 AFTER INSERT OR UPDATE OR DELETE ON product_stock
@@ -250,7 +305,7 @@ SELECT
 FROM shifts s
 LEFT JOIN orders o ON o.shift_id = s.id
 LEFT JOIN payments pay ON pay.order_id = o.id
-GROUP BY s.id;
+GROUP BY s.id, s.opened_at, s.closed_at;
 
 CREATE OR REPLACE VIEW view_waiter_performance AS
 SELECT
@@ -327,7 +382,7 @@ BEGIN
     LEFT JOIN orders o ON o.shift_id = s.id
     LEFT JOIN payments pay ON pay.order_id = o.id
     WHERE s.opened_at::date BETWEEN p_from AND p_to
-    GROUP BY s.id;
+    GROUP BY s.id, s.opened_at, s.closed_at;
 END;
 $$ LANGUAGE plpgsql STABLE;
 
