@@ -3,11 +3,11 @@ package domain
 import "time"
 
 type Role struct {
-	ID        int64     `json:"id"`
-	Name      string    `json:"name"`
-	Description string  `json:"description,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
-	IsSystem  bool      `json:"is_system"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	IsSystem    bool      `json:"is_system"`
 }
 
 type Employee struct {
@@ -38,11 +38,11 @@ type RestaurantTable struct {
 }
 
 type MenuCategory struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	SortOrder  int    `json:"sort_order"`
-	IsActive   bool   `json:"is_active"`
+	SortOrder   int    `json:"sort_order"`
+	IsActive    bool   `json:"is_active"`
 }
 
 type Product struct {
@@ -110,12 +110,12 @@ type Order struct {
 }
 
 type OrderItem struct {
-	ID             int64   `json:"id"`
-	OrderID        int64   `json:"order_id"`
-	DishID         int64   `json:"dish_id"`
-	Quantity       int     `json:"quantity"`
-	PriceAtMoment  float64 `json:"price_at_moment"`
-	Comment        string  `json:"comment,omitempty"`
+	ID            int64   `json:"id"`
+	OrderID       int64   `json:"order_id"`
+	DishID        int64   `json:"dish_id"`
+	Quantity      int     `json:"quantity"`
+	PriceAtMoment float64 `json:"price_at_moment"`
+	Comment       string  `json:"comment,omitempty"`
 }
 
 type Payment struct {
@@ -145,10 +145,10 @@ type ShiftRevenue struct {
 }
 
 type WaiterPerformance struct {
-	WaiterID     int64   `json:"waiter_id"`
-	FullName     string  `json:"full_name"`
-	OrdersCount  int64   `json:"orders_count"`
-	TotalRevenue float64 `json:"total_revenue"`
+	WaiterID     int64    `json:"waiter_id"`
+	FullName     string   `json:"full_name"`
+	OrdersCount  int64    `json:"orders_count"`
+	TotalRevenue float64  `json:"total_revenue"`
 	AvgCheck     *float64 `json:"avg_check,omitempty"`
 }
 
@@ -159,4 +159,78 @@ type DishAvailability struct {
 	IsActive             bool    `json:"is_active"`
 	AllProductsAvailable bool    `json:"all_products_available"`
 	CanBeOrdered         bool    `json:"can_be_ordered"`
+}
+
+type LowStockProduct struct {
+	ProductID   int64   `json:"product_id"`
+	Name        string  `json:"name"`
+	Unit        string  `json:"unit"`
+	Quantity    float64 `json:"quantity"`
+	IsAvailable bool    `json:"is_available"`
+}
+
+type DishIngredientDetail struct {
+	ProductID   int64   `json:"product_id"`
+	ProductName string  `json:"product_name"`
+	Quantity    float64 `json:"quantity"`
+	Unit        string  `json:"unit"`
+}
+
+type DishWithIngredients struct {
+	DishID      int64                  `json:"dish_id"`
+	Name        string                 `json:"name"`
+	CategoryID  int64                  `json:"category_id"`
+	Price       float64                `json:"price"`
+	Ingredients []DishIngredientDetail `json:"ingredients"`
+}
+
+type TableAvailability struct {
+	TableID     int64 `json:"table_id"`
+	TableNumber int   `json:"table_number"`
+	Seats       int   `json:"seats"`
+	IsActive    bool  `json:"is_active"`
+	IsAvailable bool  `json:"is_available"`
+}
+
+type ReservationConflict struct {
+	Reservation
+}
+
+type OrderWithTotal struct {
+	Order
+	TotalAmount float64 `json:"total_amount"`
+}
+
+type CustomerTotalSpent struct {
+	CustomerID int64   `json:"customer_id"`
+	FullName   string  `json:"full_name"`
+	TotalSpent float64 `json:"total_spent"`
+}
+
+type PopularDish struct {
+	DishID       int64   `json:"dish_id"`
+	Name         string  `json:"name"`
+	TimesOrdered int64   `json:"times_ordered"`
+	PortionsSold int64   `json:"portions_sold"`
+	Revenue      float64 `json:"revenue"`
+}
+
+type InventoryItem struct {
+	ProductID   int64   `json:"product_id"`
+	Name        string  `json:"name"`
+	Unit        string  `json:"unit"`
+	Quantity    float64 `json:"quantity"`
+	IsAvailable bool    `json:"is_available"`
+	InStopList  bool    `json:"in_stop_list"`
+}
+
+type AuditLog struct {
+	ID        int64     `json:"id"`
+	TableName string    `json:"table_name"`
+	RecordID  int64     `json:"record_id"`
+	Operation string    `json:"operation"`
+	ChangedAt time.Time `json:"changed_at"`
+	ChangedBy *string   `json:"changed_by,omitempty"`
+	OldData   *string   `json:"old_data,omitempty"`
+	NewData   *string   `json:"new_data,omitempty"`
 }

@@ -1,5 +1,24 @@
 basePath: /api
 definitions:
+  domain.AuditLog:
+    properties:
+      changed_at:
+        type: string
+      changed_by:
+        type: string
+      id:
+        type: integer
+      new_data:
+        type: string
+      old_data:
+        type: string
+      operation:
+        type: string
+      record_id:
+        type: integer
+      table_name:
+        type: string
+    type: object
   domain.Customer:
     properties:
       created_at:
@@ -14,6 +33,15 @@ definitions:
         type: string
       vip_level:
         type: integer
+    type: object
+  domain.CustomerTotalSpent:
+    properties:
+      customer_id:
+        type: integer
+      full_name:
+        type: string
+      total_spent:
+        type: number
     type: object
   domain.Dish:
     properties:
@@ -47,6 +75,32 @@ definitions:
       price:
         type: number
     type: object
+  domain.DishIngredientDetail:
+    properties:
+      product_id:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: number
+      unit:
+        type: string
+    type: object
+  domain.DishWithIngredients:
+    properties:
+      category_id:
+        type: integer
+      dish_id:
+        type: integer
+      ingredients:
+        items:
+          $ref: '#/definitions/domain.DishIngredientDetail'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+    type: object
   domain.Employee:
     properties:
       email:
@@ -63,6 +117,47 @@ definitions:
         type: string
       role_id:
         type: integer
+    type: object
+  domain.ImportError:
+    properties:
+      created_at:
+        type: string
+      entity:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: integer
+      raw_data:
+        type: string
+    type: object
+  domain.InventoryItem:
+    properties:
+      in_stop_list:
+        type: boolean
+      is_available:
+        type: boolean
+      name:
+        type: string
+      product_id:
+        type: integer
+      quantity:
+        type: number
+      unit:
+        type: string
+    type: object
+  domain.LowStockProduct:
+    properties:
+      is_available:
+        type: boolean
+      name:
+        type: string
+      product_id:
+        type: integer
+      quantity:
+        type: number
+      unit:
+        type: string
     type: object
   domain.MenuCategory:
     properties:
@@ -111,6 +206,27 @@ definitions:
       quantity:
         type: integer
     type: object
+  domain.OrderWithTotal:
+    properties:
+      created_at:
+        type: string
+      customer_id:
+        type: integer
+      id:
+        type: integer
+      reservation_id:
+        type: integer
+      shift_id:
+        type: integer
+      status:
+        type: string
+      table_id:
+        type: integer
+      total_amount:
+        type: number
+      waiter_id:
+        type: integer
+    type: object
   domain.Payment:
     properties:
       amount:
@@ -125,6 +241,19 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  domain.PopularDish:
+    properties:
+      dish_id:
+        type: integer
+      name:
+        type: string
+      portions_sold:
+        type: integer
+      revenue:
+        type: number
+      times_ordered:
+        type: integer
     type: object
   domain.Product:
     properties:
@@ -169,6 +298,27 @@ definitions:
       table_number:
         type: integer
     type: object
+  domain.Shift:
+    properties:
+      actual_revenue:
+        type: number
+      closed_at:
+        type: string
+      closed_by:
+        type: integer
+      expected_revenue:
+        type: number
+      id:
+        type: integer
+      note:
+        type: string
+      opened_at:
+        type: string
+      opened_by:
+        type: integer
+      status:
+        type: string
+    type: object
   domain.ShiftRevenue:
     properties:
       avg_check:
@@ -184,6 +334,19 @@ definitions:
       total_revenue:
         type: number
     type: object
+  domain.TableAvailability:
+    properties:
+      is_active:
+        type: boolean
+      is_available:
+        type: boolean
+      seats:
+        type: integer
+      table_id:
+        type: integer
+      table_number:
+        type: integer
+    type: object
   domain.WaiterPerformance:
     properties:
       avg_check:
@@ -195,6 +358,36 @@ definitions:
       total_revenue:
         type: number
       waiter_id:
+        type: integer
+    type: object
+  handlers.addItemRequest:
+    properties:
+      comment:
+        type: string
+      dish_id:
+        type: integer
+      quantity:
+        type: integer
+    type: object
+  handlers.closeOrderRequest:
+    properties:
+      payment_method:
+        type: string
+    type: object
+  handlers.closeShiftRequest:
+    properties:
+      closed_by:
+        type: integer
+      note:
+        type: string
+    type: object
+  handlers.openShiftRequest:
+    properties:
+      expected_revenue:
+        type: number
+      note:
+        type: string
+      opened_by:
         type: integer
     type: object
   handlers.orderRequest:
@@ -216,13 +409,59 @@ definitions:
       waiter_id:
         type: integer
     type: object
+  handlers.reservationCheckRequest:
+    properties:
+      guests_count:
+        type: integer
+      reserved_from:
+        type: string
+      reserved_to:
+        type: string
+      table_id:
+        type: integer
+    type: object
 info:
   contact: {}
   description: REST API for restaurant hall, orders, and warehouse management
   title: Restaurant Management System API
   version: "1.0"
 paths:
-  /api/batch-import/products:
+  /audit:
+    get:
+      parameters:
+      - description: table name
+        in: query
+        name: table_name
+        type: string
+      - description: record id
+        in: query
+        name: record_id
+        type: integer
+      - description: from datetime (RFC3339)
+        in: query
+        name: from
+        type: string
+      - description: to datetime (RFC3339)
+        in: query
+        name: to
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.AuditLog'
+            type: array
+      summary: List audit log
+      tags:
+      - audit
+  /batch-import/products:
     post:
       consumes:
       - application/json
@@ -238,7 +477,7 @@ paths:
       summary: Batch import products from JSON array or CSV (name,unit,cost_price,is_available)
       tags:
       - batch-import
-  /api/customers:
+  /customers:
     get:
       produces:
       - application/json
@@ -272,7 +511,7 @@ paths:
       summary: Create customer
       tags:
       - customers
-  /api/customers/{id}:
+  /customers/{id}:
     delete:
       parameters:
       - description: customer id
@@ -311,7 +550,25 @@ paths:
       summary: Update customer
       tags:
       - customers
-  /api/dishes:
+  /customers/{id}/total-spent:
+    get:
+      parameters:
+      - description: customer id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.CustomerTotalSpent'
+      summary: Get total spent by customer
+      tags:
+      - customers
+  /dishes:
     get:
       parameters:
       - description: limit
@@ -350,7 +607,7 @@ paths:
       summary: Create or update dish
       tags:
       - dishes
-  /api/dishes/{id}:
+  /dishes/{id}:
     delete:
       parameters:
       - description: dish id
@@ -364,7 +621,56 @@ paths:
       summary: Delete dish
       tags:
       - dishes
-  /api/employees:
+  /dishes/{id}/ingredients:
+    get:
+      parameters:
+      - description: dish id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.DishWithIngredients'
+      summary: Get dish ingredients
+      tags:
+      - dishes
+  /dishes/available:
+    get:
+      parameters:
+      - description: category id
+        in: query
+        name: category_id
+        type: integer
+      - description: max price
+        in: query
+        name: max_price
+        type: number
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.DishAvailability'
+            type: array
+      summary: List dishes available for ordering
+      tags:
+      - dishes
+  /employees:
     get:
       produces:
       - application/json
@@ -398,7 +704,7 @@ paths:
       summary: Create employee
       tags:
       - employees
-  /api/employees/{id}:
+  /employees/{id}:
     delete:
       parameters:
       - description: employee id
@@ -437,7 +743,38 @@ paths:
       summary: Update employee
       tags:
       - employees
-  /api/menu-categories:
+  /import-errors:
+    get:
+      parameters:
+      - description: entity
+        in: query
+        name: entity
+        type: string
+      - description: from datetime (RFC3339)
+        in: query
+        name: from
+        type: string
+      - description: to datetime (RFC3339)
+        in: query
+        name: to
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.ImportError'
+            type: array
+      summary: List import errors
+      tags:
+      - import-errors
+  /menu-categories:
     get:
       produces:
       - application/json
@@ -471,7 +808,7 @@ paths:
       summary: Create or update menu category
       tags:
       - menu-categories
-  /api/menu-categories/{id}:
+  /menu-categories/{id}:
     delete:
       parameters:
       - description: category id
@@ -485,7 +822,7 @@ paths:
       summary: Delete menu category
       tags:
       - menu-categories
-  /api/orders:
+  /orders:
     get:
       parameters:
       - description: status filter
@@ -528,7 +865,59 @@ paths:
       summary: Create order with items
       tags:
       - orders
-  /api/orders/{id}/items:
+  /orders/{id}/add-item:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: item
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.addItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.OrderItem'
+      summary: Add order item with current dish price
+      tags:
+      - orders
+  /orders/{id}/close:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: payment request
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/handlers.closeOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Close order and optionally create payment
+      tags:
+      - orders
+  /orders/{id}/items:
     get:
       parameters:
       - description: order id
@@ -571,7 +960,7 @@ paths:
       summary: Add or update order item
       tags:
       - orders
-  /api/orders/{id}/items/{itemId}:
+  /orders/{id}/items/{itemId}:
     delete:
       parameters:
       - description: order id
@@ -590,7 +979,7 @@ paths:
       summary: Delete order item
       tags:
       - orders
-  /api/orders/{id}/status:
+  /orders/{id}/status:
     put:
       parameters:
       - description: order id
@@ -609,7 +998,7 @@ paths:
       summary: Update order status
       tags:
       - orders
-  /api/payments:
+  /payments:
     post:
       consumes:
       - application/json
@@ -630,7 +1019,7 @@ paths:
       summary: Create or update payment
       tags:
       - payments
-  /api/payments/{orderId}:
+  /payments/{orderId}:
     delete:
       parameters:
       - description: order id
@@ -644,7 +1033,7 @@ paths:
       summary: Delete payment by order id
       tags:
       - payments
-  /api/products:
+  /products:
     get:
       parameters:
       - description: limit
@@ -683,7 +1072,7 @@ paths:
       summary: Create or update product
       tags:
       - products
-  /api/products/{id}:
+  /products/{id}:
     delete:
       parameters:
       - description: product id
@@ -697,7 +1086,30 @@ paths:
       summary: Delete product
       tags:
       - products
-  /api/reports/dishes-availability:
+  /products/low-stock:
+    get:
+      parameters:
+      - description: quantity threshold
+        in: query
+        name: threshold
+        type: number
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.LowStockProduct'
+            type: array
+      summary: List products with low stock
+      tags:
+      - products
+  /reports/dishes-availability:
     get:
       produces:
       - application/json
@@ -711,7 +1123,40 @@ paths:
       summary: Dishes availability
       tags:
       - reports
-  /api/reports/shift-revenue:
+  /reports/dishes/popular:
+    get:
+      parameters:
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.PopularDish'
+            type: array
+      summary: Popular dishes
+      tags:
+      - reports
+  /reports/inventory:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.InventoryItem'
+            type: array
+      summary: Inventory report
+      tags:
+      - reports
+  /reports/shift-revenue:
     get:
       produces:
       - application/json
@@ -725,7 +1170,32 @@ paths:
       summary: Shift revenue view
       tags:
       - reports
-  /api/reports/waiters:
+  /reports/shifts:
+    get:
+      parameters:
+      - description: from date (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: to date (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.ShiftRevenue'
+            type: array
+      summary: Shift report for period
+      tags:
+      - reports
+  /reports/waiters:
     get:
       produces:
       - application/json
@@ -739,7 +1209,7 @@ paths:
       summary: Waiter performance
       tags:
       - reports
-  /api/reservations:
+  /reservations:
     get:
       parameters:
       - description: status filter
@@ -778,7 +1248,7 @@ paths:
       summary: Create reservation
       tags:
       - reservations
-  /api/reservations/{id}:
+  /reservations/{id}:
     delete:
       parameters:
       - description: reservation id
@@ -792,7 +1262,7 @@ paths:
       summary: Delete reservation
       tags:
       - reservations
-  /api/reservations/{id}/status:
+  /reservations/{id}/status:
     put:
       parameters:
       - description: reservation id
@@ -811,7 +1281,94 @@ paths:
       summary: Update reservation status
       tags:
       - reservations
-  /api/tables:
+  /reservations/check:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: reservation check
+        in: body
+        name: reservation
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.reservationCheckRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Check reservation slot availability
+      tags:
+      - reservations
+  /shifts/close:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: close payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.closeShiftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Shift'
+      summary: Close current shift
+      tags:
+      - shifts
+  /shifts/current/orders:
+    get:
+      parameters:
+      - description: order status
+        in: query
+        name: status
+        type: string
+      - description: waiter id
+        in: query
+        name: waiter_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.OrderWithTotal'
+            type: array
+      summary: List orders in current shift
+      tags:
+      - shifts
+  /shifts/open:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: shift data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.openShiftRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Shift'
+      summary: Open a new shift
+      tags:
+      - shifts
+  /tables:
     get:
       produces:
       - application/json
@@ -845,7 +1402,7 @@ paths:
       summary: Create or update restaurant table
       tags:
       - tables
-  /api/tables/{id}:
+  /tables/{id}:
     delete:
       parameters:
       - description: table id
@@ -857,6 +1414,35 @@ paths:
         "204":
           description: No Content
       summary: Delete restaurant table
+      tags:
+      - tables
+  /tables/availability:
+    get:
+      parameters:
+      - description: from datetime (RFC3339)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: to datetime (RFC3339)
+        in: query
+        name: to
+        required: true
+        type: string
+      - description: minimum seats
+        in: query
+        name: seats_min
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.TableAvailability'
+            type: array
+      summary: Get table availability for interval
       tags:
       - tables
 swagger: "2.0"

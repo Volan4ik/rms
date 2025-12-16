@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"database/sql"
+	"errors"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -17,6 +20,8 @@ func RegisterOrders(r *gin.RouterGroup, h *Handler) {
 	g.PUT("/:id/status", h.updateOrderStatus)
 	g.GET("/:id/items", h.listOrderItems)
 	g.POST("/:id/items", h.addOrderItem)
+	g.POST("/:id/add-item", h.addOrderItemWithPrice)
+	g.POST("/:id/close", h.closeOrder)
 	g.DELETE("/:id/items/:itemId", h.deleteOrderItem)
 }
 
@@ -176,4 +181,95 @@ func (h *Handler) deleteOrderItem(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+type addItemRequest struct {
+	DishID   int64  `json:"dish_id"`
+	Quantity int    `json:"quantity"`
+	Comment  string `json:"comment"`
+}
+
+// addOrderItemWithPrice godoc
+// @Summary Add order item with current dish price
+// @Tags orders
+// @Param id path int true "order id"
+// @Accept json
+// @Produce json
+// @Param item body addItemRequest true "item"
+// @Success 200 {object} domain.OrderItem
+// @Router /orders/{id}/add-item [post]
+func (h *Handler) addOrderItemWithPrice(c *gin.Context) {
+	orderID, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+	var req addItemRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.DishID == 0 || req.Quantity <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "dish_id and quantity are required"})
+		return
+	}
+	item, err := h.Repo.AddOrderItemWithPrice(c.Request.Context(), orderID, req.DishID, req.Quantity, req.Comment)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			c.JSON(http.StatusNotFound, gin.H{"error": "order or dish not found"})
+			return
+		default:
+			if err.Error() == "order is not editable" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+	c.JSON(http.StatusOK, item)
+}
+
+type closeOrderRequest struct {
+	PaymentMethod *string `json:"payment_method,omitempty"`
+}
+
+// closeOrder godoc
+// @Summary Close order and optionally create payment
+// @Tags orders
+// @Param id path int true "order id"
+// @Accept json
+// @Produce json
+// @Param request body closeOrderRequest false "payment request"
+// @Success 200 {object} map[string]interface{}
+// @Router /orders/{id}/close [post]
+func (h *Handler) closeOrder(c *gin.Context) {
+	orderID, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+	var req closeOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	order, payment, err := h.Repo.CloseOrder(c.Request.Context(), orderID, req.PaymentMethod)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "order not found"})
+			return
+		}
+		if err.Error() == "order is already finished" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	resp := gin.H{"order": order}
+	if payment != nil {
+		resp["payment"] = payment
+	}
+	c.JSON(http.StatusOK, resp)
 }

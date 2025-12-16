@@ -13,6 +13,7 @@ import (
 func RegisterProducts(r *gin.RouterGroup, h *Handler) {
 	g := r.Group("/products")
 	g.GET("", h.listProducts)
+	g.GET("/low-stock", h.listLowStockProducts)
 	g.POST("", h.upsertProduct)
 	g.PUT("/:id", h.upsertProduct)
 	g.DELETE("/:id", h.deleteProduct)
@@ -76,4 +77,23 @@ func (h *Handler) deleteProduct(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// listLowStockProducts godoc
+// @Summary List products with low stock
+// @Tags products
+// @Produce json
+// @Param threshold query number false "quantity threshold"
+// @Param limit query int false "limit"
+// @Success 200 {array} domain.LowStockProduct
+// @Router /products/low-stock [get]
+func (h *Handler) listLowStockProducts(c *gin.Context) {
+	threshold, _ := strconv.ParseFloat(c.DefaultQuery("threshold", "2"), 64)
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "200"))
+	products, err := h.Repo.ListLowStockProducts(c.Request.Context(), threshold, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, products)
 }

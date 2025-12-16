@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,7 @@ import (
 func RegisterCustomers(r *gin.RouterGroup, h *Handler) {
 	g := r.Group("/customers")
 	g.GET("", h.listCustomers)
+	g.GET("/:id/total-spent", h.getCustomerTotalSpent)
 	g.POST("", h.createCustomer)
 	g.PUT("/:id", h.updateCustomer)
 	g.DELETE("/:id", h.deleteCustomer)
@@ -100,4 +102,28 @@ func (h *Handler) deleteCustomer(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// getCustomerTotalSpent godoc
+// @Summary Get total spent by customer
+// @Tags customers
+// @Produce json
+// @Param id path int true "customer id"
+// @Success 200 {object} domain.CustomerTotalSpent
+// @Router /customers/{id}/total-spent [get]
+func (h *Handler) getCustomerTotalSpent(c *gin.Context) {
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+	data, err := h.Repo.GetCustomerTotalSpent(c.Request.Context(), id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "customer not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, data)
 }

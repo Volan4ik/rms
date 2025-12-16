@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -13,6 +14,8 @@ import (
 func RegisterDishes(r *gin.RouterGroup, h *Handler) {
 	g := r.Group("/dishes")
 	g.GET("", h.listDishes)
+	g.GET("/available", h.listAvailableDishes)
+	g.GET("/:id/ingredients", h.getDishIngredients)
 	g.POST("", h.upsertDish)
 	g.PUT("/:id", h.upsertDish)
 	g.DELETE("/:id", h.deleteDish)
@@ -76,4 +79,70 @@ func (h *Handler) deleteDish(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// listAvailableDishes godoc
+// @Summary List dishes available for ordering
+// @Tags dishes
+// @Produce json
+// @Param category_id query int false "category id"
+// @Param max_price query number false "max price"
+// @Param limit query int false "limit"
+// @Param offset query int false "offset"
+// @Success 200 {array} domain.DishAvailability
+// @Router /dishes/available [get]
+func (h *Handler) listAvailableDishes(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var categoryID *int64
+	if v := c.Query("category_id"); v != "" {
+		if parsed, err := strconv.ParseInt(v, 10, 64); err == nil {
+			categoryID = &parsed
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid category_id"})
+			return
+		}
+	}
+	var maxPrice *float64
+	if v := c.Query("max_price"); v != "" {
+		if parsed, err := strconv.ParseFloat(v, 64); err == nil {
+			maxPrice = &parsed
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid max_price"})
+			return
+		}
+	}
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
+	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+
+	data, err := h.Repo.GetAvailableDishes(ctx, categoryID, maxPrice, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, data)
+}
+
+// getDishIngredients godoc
+// @Summary Get dish ingredients
+// @Tags dishes
+// @Produce json
+// @Param id path int true "dish id"
+// @Success 200 {object} domain.DishWithIngredients
+// @Router /dishes/{id}/ingredients [get]
+func (h *Handler) getDishIngredients(c *gin.Context) {
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+	data, err := h.Repo.GetDishWithIngredients(c.Request.Context(), id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "dish not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, data)
 }

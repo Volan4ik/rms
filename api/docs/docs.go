@@ -15,6 +15,60 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/audit": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "audit"
+                ],
+                "summary": "List audit log",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "table name",
+                        "name": "table_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "record id",
+                        "name": "record_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "from datetime (RFC3339)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "to datetime (RFC3339)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.AuditLog"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/batch-import/products": {
             "post": {
                 "consumes": [
@@ -153,6 +207,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/customers/{id}/total-spent": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "customers"
+                ],
+                "summary": "Get total spent by customer",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "customer id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.CustomerTotalSpent"
+                        }
+                    }
+                }
+            }
+        },
         "/dishes": {
             "get": {
                 "produces": [
@@ -214,6 +296,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/dishes/available": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dishes"
+                ],
+                "summary": "List dishes available for ordering",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "category id",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "max price",
+                        "name": "max_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.DishAvailability"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/dishes/{id}": {
             "delete": {
                 "tags": [
@@ -232,6 +362,34 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/dishes/{id}/ingredients": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dishes"
+                ],
+                "summary": "Get dish ingredients",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "dish id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.DishWithIngredients"
+                        }
                     }
                 }
             }
@@ -345,6 +503,54 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/import-errors": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-errors"
+                ],
+                "summary": "List import errors",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "entity",
+                        "name": "entity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "from datetime (RFC3339)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "to datetime (RFC3339)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.ImportError"
+                            }
+                        }
                     }
                 }
             }
@@ -486,6 +692,86 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/domain.Order"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{id}/add-item": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Add order item with current dish price",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "item",
+                        "name": "item",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.addItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.OrderItem"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{id}/close": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Close order and optionally create payment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "payment request",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.closeOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -731,6 +1017,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/products/low-stock": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "List products with low stock",
+                "parameters": [
+                    {
+                        "type": "number",
+                        "description": "quantity threshold",
+                        "name": "threshold",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.LowStockProduct"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/products/{id}": {
             "delete": {
                 "tags": [
@@ -775,6 +1097,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/dishes/popular": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Popular dishes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.PopularDish"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/inventory": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Inventory report",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.InventoryItem"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/shift-revenue": {
             "get": {
                 "produces": [
@@ -784,6 +1158,44 @@ const docTemplate = `{
                     "reports"
                 ],
                 "summary": "Shift revenue view",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.ShiftRevenue"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/shifts": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Shift report for period",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "from date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "to date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -880,6 +1292,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/reservations/check": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reservations"
+                ],
+                "summary": "Check reservation slot availability",
+                "parameters": [
+                    {
+                        "description": "reservation check",
+                        "name": "reservation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.reservationCheckRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/reservations/{id}": {
             "delete": {
                 "tags": [
@@ -927,6 +1373,108 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK"
+                    }
+                }
+            }
+        },
+        "/shifts/close": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "shifts"
+                ],
+                "summary": "Close current shift",
+                "parameters": [
+                    {
+                        "description": "close payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.closeShiftRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Shift"
+                        }
+                    }
+                }
+            }
+        },
+        "/shifts/current/orders": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "shifts"
+                ],
+                "summary": "List orders in current shift",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "order status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "waiter id",
+                        "name": "waiter_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.OrderWithTotal"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/shifts/open": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "shifts"
+                ],
+                "summary": "Open a new shift",
+                "parameters": [
+                    {
+                        "description": "shift data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.openShiftRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Shift"
+                        }
                     }
                 }
             }
@@ -984,6 +1532,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/tables/availability": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tables"
+                ],
+                "summary": "Get table availability for interval",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "from datetime (RFC3339)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "to datetime (RFC3339)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "minimum seats",
+                        "name": "seats_min",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.TableAvailability"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/tables/{id}": {
             "delete": {
                 "tags": [
@@ -1008,6 +1600,35 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domain.AuditLog": {
+            "type": "object",
+            "properties": {
+                "changed_at": {
+                    "type": "string"
+                },
+                "changed_by": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "new_data": {
+                    "type": "string"
+                },
+                "old_data": {
+                    "type": "string"
+                },
+                "operation": {
+                    "type": "string"
+                },
+                "record_id": {
+                    "type": "integer"
+                },
+                "table_name": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.Customer": {
             "type": "object",
             "properties": {
@@ -1028,6 +1649,20 @@ const docTemplate = `{
                 },
                 "vip_level": {
                     "type": "integer"
+                }
+            }
+        },
+        "domain.CustomerTotalSpent": {
+            "type": "object",
+            "properties": {
+                "customer_id": {
+                    "type": "integer"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "total_spent": {
+                    "type": "number"
                 }
             }
         },
@@ -1080,6 +1715,46 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.DishIngredientDetail": {
+            "type": "object",
+            "properties": {
+                "product_id": {
+                    "type": "integer"
+                },
+                "product_name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unit": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.DishWithIngredients": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "dish_id": {
+                    "type": "integer"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.DishIngredientDetail"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                }
+            }
+        },
         "domain.Employee": {
             "type": "object",
             "properties": {
@@ -1103,6 +1778,69 @@ const docTemplate = `{
                 },
                 "role_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "domain.ImportError": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "entity": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "raw_data": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.InventoryItem": {
+            "type": "object",
+            "properties": {
+                "in_stop_list": {
+                    "type": "boolean"
+                },
+                "is_available": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unit": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.LowStockProduct": {
+            "type": "object",
+            "properties": {
+                "is_available": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unit": {
+                    "type": "string"
                 }
             }
         },
@@ -1178,6 +1916,38 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.OrderWithTotal": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "customer_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "reservation_id": {
+                    "type": "integer"
+                },
+                "shift_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "table_id": {
+                    "type": "integer"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "waiter_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "domain.Payment": {
             "type": "object",
             "properties": {
@@ -1198,6 +1968,26 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.PopularDish": {
+            "type": "object",
+            "properties": {
+                "dish_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "portions_sold": {
+                    "type": "integer"
+                },
+                "revenue": {
+                    "type": "number"
+                },
+                "times_ordered": {
+                    "type": "integer"
                 }
             }
         },
@@ -1267,6 +2057,38 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.Shift": {
+            "type": "object",
+            "properties": {
+                "actual_revenue": {
+                    "type": "number"
+                },
+                "closed_at": {
+                    "type": "string"
+                },
+                "closed_by": {
+                    "type": "integer"
+                },
+                "expected_revenue": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "opened_at": {
+                    "type": "string"
+                },
+                "opened_by": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.ShiftRevenue": {
             "type": "object",
             "properties": {
@@ -1290,6 +2112,26 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.TableAvailability": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_available": {
+                    "type": "boolean"
+                },
+                "seats": {
+                    "type": "integer"
+                },
+                "table_id": {
+                    "type": "integer"
+                },
+                "table_number": {
+                    "type": "integer"
+                }
+            }
+        },
         "domain.WaiterPerformance": {
             "type": "object",
             "properties": {
@@ -1306,6 +2148,53 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "waiter_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.addItemRequest": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "dish_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.closeOrderRequest": {
+            "type": "object",
+            "properties": {
+                "payment_method": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.closeShiftRequest": {
+            "type": "object",
+            "properties": {
+                "closed_by": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.openShiftRequest": {
+            "type": "object",
+            "properties": {
+                "expected_revenue": {
+                    "type": "number"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "opened_by": {
                     "type": "integer"
                 }
             }
@@ -1335,6 +2224,23 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "waiter_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.reservationCheckRequest": {
+            "type": "object",
+            "properties": {
+                "guests_count": {
+                    "type": "integer"
+                },
+                "reserved_from": {
+                    "type": "string"
+                },
+                "reserved_to": {
+                    "type": "string"
+                },
+                "table_id": {
                     "type": "integer"
                 }
             }

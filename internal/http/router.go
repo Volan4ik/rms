@@ -34,8 +34,10 @@ func NewRouter(repo *repository.Repository) *gin.Engine {
 		handlers.RegisterProducts(api, h)
 		handlers.RegisterReservations(api, h)
 		handlers.RegisterOrders(api, h)
+		handlers.RegisterShifts(api, h)
 		handlers.RegisterPayments(api, h)
 		handlers.RegisterReports(api, h)
+		handlers.RegisterAudit(api, h)
 		handlers.RegisterBatchImport(api, h)
 	}
 

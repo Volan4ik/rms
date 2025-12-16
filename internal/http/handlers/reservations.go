@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -12,6 +13,7 @@ import (
 func RegisterReservations(r *gin.RouterGroup, h *Handler) {
 	g := r.Group("/reservations")
 	g.GET("", h.listReservations)
+	g.POST("/check", h.checkReservationAvailability)
 	g.POST("", h.createReservation)
 	g.PUT("/:id/status", h.updateReservationStatus)
 	g.DELETE("/:id", h.deleteReservation)
@@ -99,4 +101,46 @@ func (h *Handler) deleteReservation(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+type reservationCheckRequest struct {
+	TableID      int64     `json:"table_id"`
+	ReservedFrom time.Time `json:"reserved_from"`
+	ReservedTo   time.Time `json:"reserved_to"`
+	GuestsCount  int       `json:"guests_count"`
+}
+
+// checkReservationAvailability godoc
+// @Summary Check reservation slot availability
+// @Tags reservations
+// @Accept json
+// @Produce json
+// @Param reservation body reservationCheckRequest true "reservation check"
+// @Success 200 {object} map[string]interface{}
+// @Router /reservations/check [post]
+func (h *Handler) checkReservationAvailability(c *gin.Context) {
+	var req reservationCheckRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.TableID == 0 || req.ReservedFrom.IsZero() || req.ReservedTo.IsZero() {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "table_id, reserved_from and reserved_to are required"})
+		return
+	}
+	if !req.ReservedTo.After(req.ReservedFrom) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "reserved_to must be after reserved_from"})
+		return
+	}
+
+	conflicts, err := h.Repo.CheckReservationConflicts(c.Request.Context(), req.TableID, req.ReservedFrom, req.ReservedTo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if len(conflicts) == 0 {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": false, "conflicts": conflicts})
 }
