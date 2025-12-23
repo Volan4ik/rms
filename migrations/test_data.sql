@@ -18,22 +18,23 @@ ON CONFLICT (name) DO NOTHING;
 -- EMPLOYEES --
 ---------------
 WITH first_names AS (
-    SELECT unnest(ARRAY[
+    SELECT ARRAY[
         'Иван','Мария','Алексей','Анна','Дмитрий','Екатерина',
         'Сергей','Ольга','Павел','Наталья','Михаил','Елена'
-    ]) AS first_name
+    ] AS arr
 ),
 last_names AS (
-    SELECT unnest(ARRAY[
+    SELECT ARRAY[
         'Иванов','Петров','Сидоров','Кузнецов','Смирнов',
         'Васильев','Попов','Новиков','Фёдоров','Морозов',
         'Волкова','Соколова'
-    ]) AS last_name
+    ] AS arr
 )
-INSERT INTO employees (full_name, phone, email, role_id, hired_at, is_active)
+INSERT INTO employees (first_name, last_name, phone, email, role_id, hired_at, is_active)
 SELECT
-    fn.first_name || ' ' || ln.last_name AS full_name,
-    format('+79%08s', gs) AS phone,
+    fn.arr[((gs - 1) % array_length(fn.arr, 1)) + 1] AS first_name,
+    ln.arr[((gs + 2) % array_length(ln.arr, 1)) + 1] AS last_name,
+    format('+79%s', lpad(gs::text, 8, '0')) AS phone,
     format('staff%02s@rms.local', gs) AS email,
     CASE
         WHEN gs <= 2  THEN (SELECT id FROM roles WHERE name='admin')
@@ -45,12 +46,8 @@ SELECT
     current_date - ((gs % 730)) * interval '1 day' AS hired_at,
     TRUE
 FROM generate_series(1,40) AS gs
-CROSS JOIN LATERAL (
-    SELECT first_name FROM first_names ORDER BY random() LIMIT 1
-) fn
-CROSS JOIN LATERAL (
-    SELECT last_name FROM last_names ORDER BY random() LIMIT 1
-) ln
+CROSS JOIN first_names fn
+CROSS JOIN last_names ln
 ON CONFLICT (phone) DO NOTHING;
 
 -----------------------
@@ -171,21 +168,22 @@ SET quantity   = EXCLUDED.quantity,
 -- CUSTOMERS --
 ---------------
 WITH first_names AS (
-    SELECT unnest(ARRAY[
+    SELECT ARRAY[
         'Александр','Максим','Илья','Кирилл','Тимофей',
         'София','Алиса','Полина','Варвара','Анастасия'
-    ]) AS first_name
+    ] AS arr
 ),
 last_names AS (
-    SELECT unnest(ARRAY[
+    SELECT ARRAY[
         'Иванов','Петров','Сидоров','Кузнецов','Смирнов',
         'Орлова','Сергеева','Попова','Алексеева','Михайлова'
-    ]) AS last_name
+    ] AS arr
 )
-INSERT INTO customers (full_name, phone, email, vip_level, created_at)
+INSERT INTO customers (first_name, last_name, phone, email, vip_level, created_at)
 SELECT
-    fn.first_name || ' ' || ln.last_name AS full_name,
-    format('+79%08s', gs + 1000) AS phone,
+    fn.arr[((gs - 1) % array_length(fn.arr, 1)) + 1] AS first_name,
+    ln.arr[((gs + 5) % array_length(ln.arr, 1)) + 1] AS last_name,
+    format('+79%s', lpad((gs + 1000)::text, 8, '0')) AS phone,
     format('customer%03s@example.local', gs) AS email,
     CASE
         WHEN random() < 0.7  THEN 0
@@ -195,12 +193,8 @@ SELECT
     END AS vip_level,
     now() - (random() * interval '180 days')
 FROM generate_series(1,800) AS gs
-CROSS JOIN LATERAL (
-    SELECT first_name FROM first_names ORDER BY random() LIMIT 1
-) fn
-CROSS JOIN LATERAL (
-    SELECT last_name FROM last_names ORDER BY random() LIMIT 1
-) ln
+CROSS JOIN first_names fn
+CROSS JOIN last_names ln
 ON CONFLICT (phone) DO NOTHING;
 
 ------------

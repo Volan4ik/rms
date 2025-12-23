@@ -1631,11 +1631,14 @@
                 "email": {
                     "type": "string"
                 },
-                "full_name": {
+                "first_name": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
                 },
                 "phone": {
                     "type": "string"
@@ -1651,7 +1654,10 @@
                 "customer_id": {
                     "type": "integer"
                 },
-                "full_name": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
                     "type": "string"
                 },
                 "total_spent": {
@@ -1754,7 +1760,7 @@
                 "email": {
                     "type": "string"
                 },
-                "full_name": {
+                "first_name": {
                     "type": "string"
                 },
                 "hired_at": {
@@ -1765,6 +1771,9 @@
                 },
                 "is_active": {
                     "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
                 },
                 "phone": {
                     "type": "string"
@@ -2131,7 +2140,10 @@
                 "avg_check": {
                     "type": "number"
                 },
-                "full_name": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
                     "type": "string"
                 },
                 "orders_count": {

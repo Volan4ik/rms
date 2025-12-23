@@ -12,7 +12,6 @@ import (
 	"github.com/example/rms/internal/config"
 )
 
-// Connect opens a PostgreSQL connection using provided config.
 func Connect(cfg *config.Config) (*sql.DB, error) {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName)

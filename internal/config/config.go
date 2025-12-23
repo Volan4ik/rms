@@ -17,7 +17,6 @@ type Config struct {
 	HTTPPort   string
 }
 
-// Load reads environment variables with sensible defaults for local development.
 func Load() *Config {
 	loadEnvFile(".env")
 
@@ -33,7 +32,6 @@ func Load() *Config {
 	return cfg
 }
 
-// loadEnvFile loads key=value pairs from a .env file if present (does not override already set env vars).
 func loadEnvFile(path string) {
 	file, err := os.Open(path)
 	if err != nil {

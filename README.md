@@ -50,7 +50,7 @@
 ```sh
 curl -X POST http://localhost:8080/api/customers \
   -H "Content-Type: application/json" \
-  -d '{"full_name":"John Doe","phone":"+70001234567","vip_level":1}'
+  -d '{"first_name":"John","last_name":"Doe","phone":"+70001234567","vip_level":1}'
 
 curl -X POST http://localhost:8080/api/batch-import/products \
   -H "Content-Type: application/json" \

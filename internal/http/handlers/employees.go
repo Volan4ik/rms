@@ -8,7 +8,6 @@ import (
 	"github.com/example/rms/internal/domain"
 )
 
-// RegisterEmployees registers employee endpoints.
 func RegisterEmployees(r *gin.RouterGroup, h *Handler) {
 	g := r.Group("/employees")
 	g.GET("", h.listEmployees)
@@ -46,8 +45,8 @@ func (h *Handler) createEmployee(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if req.FullName == "" || req.Phone == "" || req.RoleID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "full_name, phone and role_id are required"})
+	if req.FirstName == "" || req.LastName == "" || req.Phone == "" || req.RoleID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "first_name, last_name, phone and role_id are required"})
 		return
 	}
 	if err := h.Repo.CreateEmployee(c.Request.Context(), &req); err != nil {

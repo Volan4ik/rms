@@ -48,8 +48,8 @@ func (h *Handler) createCustomer(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if req.FullName == "" || req.Phone == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "full_name and phone are required"})
+	if req.FirstName == "" || req.LastName == "" || req.Phone == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "first_name, last_name and phone are required"})
 		return
 	}
 	if err := h.Repo.CreateCustomer(c.Request.Context(), &req); err != nil {

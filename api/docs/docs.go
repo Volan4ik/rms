@@ -1638,11 +1638,14 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
-                "full_name": {
+                "first_name": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
                 },
                 "phone": {
                     "type": "string"
@@ -1658,7 +1661,10 @@ const docTemplate = `{
                 "customer_id": {
                     "type": "integer"
                 },
-                "full_name": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
                     "type": "string"
                 },
                 "total_spent": {
@@ -1761,7 +1767,7 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
-                "full_name": {
+                "first_name": {
                     "type": "string"
                 },
                 "hired_at": {
@@ -1772,6 +1778,9 @@ const docTemplate = `{
                 },
                 "is_active": {
                     "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
                 },
                 "phone": {
                     "type": "string"
@@ -2138,7 +2147,10 @@ const docTemplate = `{
                 "avg_check": {
                     "type": "number"
                 },
-                "full_name": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
                     "type": "string"
                 },
                 "orders_count": {

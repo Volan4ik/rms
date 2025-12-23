@@ -1,6 +1,3 @@
--- Schema for Restaurant Management System
--- Contains tables, constraints, indexes, views, functions, and triggers
-
 CREATE TABLE IF NOT EXISTS roles (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
@@ -11,7 +8,8 @@ CREATE TABLE IF NOT EXISTS roles (
 
 CREATE TABLE IF NOT EXISTS employees (
     id BIGSERIAL PRIMARY KEY,
-    full_name TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
     phone TEXT NOT NULL UNIQUE,
     email TEXT UNIQUE,
     role_id BIGINT NOT NULL REFERENCES roles(id),
@@ -21,7 +19,8 @@ CREATE TABLE IF NOT EXISTS employees (
 
 CREATE TABLE IF NOT EXISTS customers (
     id BIGSERIAL PRIMARY KEY,
-    full_name TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
     phone TEXT NOT NULL UNIQUE,
     email TEXT UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
@@ -149,10 +148,8 @@ CREATE TABLE IF NOT EXISTS import_errors (
     error_message TEXT NOT NULL
 );
 
--- Extensions
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
--- Additional constraints and computed columns
 ALTER TABLE IF EXISTS reservations
     ADD COLUMN IF NOT EXISTS reserved_range tsrange
         GENERATED ALWAYS AS (tsrange(reserved_from, reserved_to, '[)')) STORED;
@@ -188,7 +185,6 @@ BEGIN
 END;
 $$;
 
--- Indexes
 CREATE INDEX IF NOT EXISTS idx_employees_role_id ON employees(role_id);
 CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
 CREATE INDEX IF NOT EXISTS idx_customers_created_at ON customers(created_at);
@@ -224,7 +220,6 @@ CREATE INDEX IF NOT EXISTS idx_audit_log_changed_at ON audit_log(changed_at);
 CREATE INDEX IF NOT EXISTS idx_import_errors_created_at ON import_errors(created_at);
 CREATE INDEX IF NOT EXISTS idx_import_errors_entity ON import_errors(entity);
 
--- Functions and triggers
 
 CREATE OR REPLACE FUNCTION fn_audit() RETURNS TRIGGER AS $$
 BEGIN
@@ -257,7 +252,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger bindings for product_stock
 DROP TRIGGER IF EXISTS trg_product_stock_set_updated_at ON product_stock;
 CREATE TRIGGER trg_product_stock_set_updated_at
 BEFORE UPDATE ON product_stock
@@ -268,7 +262,6 @@ CREATE TRIGGER trg_product_stock_update
 AFTER INSERT OR UPDATE OR DELETE ON product_stock
 FOR EACH ROW EXECUTE FUNCTION fn_update_product_availability();
 
--- Audit triggers
 DO $$
 DECLARE
     tbl TEXT;
@@ -280,7 +273,6 @@ BEGIN
 END;
 $$;
 
--- Views
 CREATE OR REPLACE VIEW view_dishes_availability AS
 SELECT
     d.id,
@@ -310,7 +302,8 @@ GROUP BY s.id, s.opened_at, s.closed_at;
 CREATE OR REPLACE VIEW view_waiter_performance AS
 SELECT
     e.id AS waiter_id,
-    e.full_name,
+    e.first_name,
+    e.last_name,
     COUNT(DISTINCT o.id) AS orders_count,
     COALESCE(SUM(CASE WHEN p.status = 'paid' THEN p.amount ELSE 0 END), 0) AS total_revenue,
     CASE WHEN COUNT(DISTINCT o.id) = 0 THEN NULL ELSE ROUND(COALESCE(SUM(CASE WHEN p.status = 'paid' THEN p.amount ELSE 0 END), 0) / COUNT(DISTINCT o.id), 2) END AS avg_check
@@ -318,7 +311,7 @@ FROM employees e
 LEFT JOIN orders o ON o.waiter_id = e.id
 LEFT JOIN payments p ON p.order_id = o.id
 WHERE e.is_active = TRUE
-GROUP BY e.id, e.full_name;
+GROUP BY e.id, e.first_name, e.last_name;
 
 CREATE OR REPLACE VIEW view_popular_dishes AS
 SELECT
@@ -332,7 +325,6 @@ LEFT JOIN order_items oi ON oi.dish_id = d.id
 GROUP BY d.id, d.name
 ORDER BY portions_sold DESC NULLS LAST;
 
--- Scalar functions
 CREATE OR REPLACE FUNCTION get_customer_total_spent(p_customer_id BIGINT) RETURNS NUMERIC AS $$
 DECLARE
     total NUMERIC;
@@ -340,8 +332,7 @@ BEGIN
     SELECT COALESCE(SUM(p.amount), 0) INTO total
     FROM payments p
     JOIN orders o ON o.id = p.order_id
-    WHERE o.customer_id = p_customer_id
-      AND p.status = 'paid';
+    WHERE o.customer_id = p_customer_id AND p.status = 'paid';
     RETURN total;
 END;
 $$ LANGUAGE plpgsql STABLE;
@@ -359,7 +350,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- Table-valued functions
 CREATE OR REPLACE FUNCTION get_shift_report(p_from DATE, p_to DATE)
 RETURNS TABLE (
     shift_id BIGINT,
@@ -389,7 +379,8 @@ $$ LANGUAGE plpgsql STABLE;
 CREATE OR REPLACE FUNCTION get_waiter_performance()
 RETURNS TABLE (
     waiter_id BIGINT,
-    full_name TEXT,
+    first_name TEXT,
+    last_name TEXT,
     orders_count BIGINT,
     total_revenue NUMERIC,
     avg_check NUMERIC

@@ -157,6 +157,27 @@ func (h *Handler) addOrderItem(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "dish_id and quantity are required"})
 		return
 	}
+
+	if req.PriceAtMoment <= 0 {
+		item, err := h.Repo.AddOrderItemWithPrice(c.Request.Context(), orderID, req.DishID, req.Quantity, req.Comment)
+		if err != nil {
+			switch err {
+			case sql.ErrNoRows:
+				c.JSON(http.StatusNotFound, gin.H{"error": "order or dish not found"})
+				return
+			default:
+				if err.Error() == "order is not editable" {
+					c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+					return
+				}
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		}
+		c.JSON(http.StatusOK, item)
+		return
+	}
+
 	if err := h.Repo.AddOrderItem(c.Request.Context(), orderID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

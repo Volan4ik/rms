@@ -11,18 +11,20 @@ type Role struct {
 }
 
 type Employee struct {
-	ID       int64     `json:"id"`
-	FullName string    `json:"full_name"`
-	Phone    string    `json:"phone"`
-	Email    *string   `json:"email,omitempty"`
-	RoleID   int64     `json:"role_id"`
-	HiredAt  time.Time `json:"hired_at"`
-	IsActive bool      `json:"is_active"`
+	ID        int64     `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Phone     string    `json:"phone"`
+	Email     *string   `json:"email,omitempty"`
+	RoleID    int64     `json:"role_id"`
+	HiredAt   time.Time `json:"hired_at"`
+	IsActive  bool      `json:"is_active"`
 }
 
 type Customer struct {
 	ID        int64     `json:"id"`
-	FullName  string    `json:"full_name"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
 	Phone     string    `json:"phone"`
 	Email     *string   `json:"email,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
@@ -146,7 +148,8 @@ type ShiftRevenue struct {
 
 type WaiterPerformance struct {
 	WaiterID     int64    `json:"waiter_id"`
-	FullName     string   `json:"full_name"`
+	FirstName    string   `json:"first_name"`
+	LastName     string   `json:"last_name"`
 	OrdersCount  int64    `json:"orders_count"`
 	TotalRevenue float64  `json:"total_revenue"`
 	AvgCheck     *float64 `json:"avg_check,omitempty"`
@@ -203,7 +206,8 @@ type OrderWithTotal struct {
 
 type CustomerTotalSpent struct {
 	CustomerID int64   `json:"customer_id"`
-	FullName   string  `json:"full_name"`
+	FirstName  string  `json:"first_name"`
+	LastName   string  `json:"last_name"`
 	TotalSpent float64 `json:"total_spent"`
 }
 

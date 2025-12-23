@@ -52,7 +52,7 @@ func nullIfEmpty(s string) *string {
 
 // Customers
 func (r *Repository) ListCustomers(ctx context.Context) ([]domain.Customer, error) {
-	rows, err := r.DB.QueryContext(ctx, `SELECT id, full_name, phone, email, created_at, vip_level FROM customers ORDER BY created_at DESC LIMIT 200`)
+	rows, err := r.DB.QueryContext(ctx, `SELECT id, first_name, last_name, phone, email, created_at, vip_level FROM customers ORDER BY created_at DESC LIMIT 200`)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (r *Repository) ListCustomers(ctx context.Context) ([]domain.Customer, erro
 	for rows.Next() {
 		var c domain.Customer
 		var email sql.NullString
-		if err := rows.Scan(&c.ID, &c.FullName, &c.Phone, &email, &c.CreatedAt, &c.VIPLevel); err != nil {
+		if err := rows.Scan(&c.ID, &c.FirstName, &c.LastName, &c.Phone, &email, &c.CreatedAt, &c.VIPLevel); err != nil {
 			return nil, err
 		}
 		c.Email = scanNullableString(email)
@@ -72,16 +72,19 @@ func (r *Repository) ListCustomers(ctx context.Context) ([]domain.Customer, erro
 }
 
 func (r *Repository) CreateCustomer(ctx context.Context, c *domain.Customer) error {
-	return r.DB.QueryRowContext(ctx, `
-		INSERT INTO customers (full_name, phone, email, vip_level)
-		VALUES ($1,$2,$3,$4) RETURNING id, created_at`,
-		c.FullName, c.Phone, c.Email, c.VIPLevel).Scan(&c.ID, &c.CreatedAt)
+	if err := r.DB.QueryRowContext(ctx, `
+		INSERT INTO customers (first_name, last_name, phone, email, vip_level)
+		VALUES ($1,$2,$3,$4,$5) RETURNING id, created_at`,
+		c.FirstName, c.LastName, c.Phone, c.Email, c.VIPLevel).Scan(&c.ID, &c.CreatedAt); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *Repository) UpdateCustomer(ctx context.Context, id int64, c *domain.Customer) error {
 	res, err := r.DB.ExecContext(ctx, `
-		UPDATE customers SET full_name=$1, phone=$2, email=$3, vip_level=$4 WHERE id=$5`,
-		c.FullName, c.Phone, c.Email, c.VIPLevel, id)
+		UPDATE customers SET first_name=$1, last_name=$2, phone=$3, email=$4, vip_level=$5 WHERE id=$6`,
+		c.FirstName, c.LastName, c.Phone, c.Email, c.VIPLevel, id)
 	if err != nil {
 		return err
 	}
@@ -99,7 +102,7 @@ func (r *Repository) DeleteCustomer(ctx context.Context, id int64) error {
 
 // Employees
 func (r *Repository) ListEmployees(ctx context.Context) ([]domain.Employee, error) {
-	rows, err := r.DB.QueryContext(ctx, `SELECT id, full_name, phone, email, role_id, hired_at, is_active FROM employees ORDER BY id`)
+	rows, err := r.DB.QueryContext(ctx, `SELECT id, first_name, last_name, phone, email, role_id, hired_at, is_active FROM employees ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +111,7 @@ func (r *Repository) ListEmployees(ctx context.Context) ([]domain.Employee, erro
 	for rows.Next() {
 		var e domain.Employee
 		var email sql.NullString
-		if err := rows.Scan(&e.ID, &e.FullName, &e.Phone, &email, &e.RoleID, &e.HiredAt, &e.IsActive); err != nil {
+		if err := rows.Scan(&e.ID, &e.FirstName, &e.LastName, &e.Phone, &email, &e.RoleID, &e.HiredAt, &e.IsActive); err != nil {
 			return nil, err
 		}
 		e.Email = scanNullableString(email)
@@ -118,16 +121,19 @@ func (r *Repository) ListEmployees(ctx context.Context) ([]domain.Employee, erro
 }
 
 func (r *Repository) CreateEmployee(ctx context.Context, e *domain.Employee) error {
-	return r.DB.QueryRowContext(ctx, `
-		INSERT INTO employees(full_name, phone, email, role_id, hired_at, is_active)
-		VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-		e.FullName, e.Phone, e.Email, e.RoleID, e.HiredAt, e.IsActive).Scan(&e.ID)
+	if err := r.DB.QueryRowContext(ctx, `
+		INSERT INTO employees(first_name, last_name, phone, email, role_id, hired_at, is_active)
+		VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+		e.FirstName, e.LastName, e.Phone, e.Email, e.RoleID, e.HiredAt, e.IsActive).Scan(&e.ID); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *Repository) UpdateEmployee(ctx context.Context, id int64, e *domain.Employee) error {
 	res, err := r.DB.ExecContext(ctx, `
-		UPDATE employees SET full_name=$1, phone=$2, email=$3, role_id=$4, is_active=$5 WHERE id=$6`,
-		e.FullName, e.Phone, e.Email, e.RoleID, e.IsActive, id)
+		UPDATE employees SET first_name=$1, last_name=$2, phone=$3, email=$4, role_id=$5, is_active=$6 WHERE id=$7`,
+		e.FirstName, e.LastName, e.Phone, e.Email, e.RoleID, e.IsActive, id)
 	if err != nil {
 		return err
 	}
@@ -488,7 +494,7 @@ func (r *Repository) GetShiftRevenue(ctx context.Context) ([]domain.ShiftRevenue
 }
 
 func (r *Repository) GetWaiterPerformance(ctx context.Context) ([]domain.WaiterPerformance, error) {
-	rows, err := r.DB.QueryContext(ctx, `SELECT waiter_id, full_name, orders_count, total_revenue, avg_check FROM view_waiter_performance ORDER BY total_revenue DESC`)
+	rows, err := r.DB.QueryContext(ctx, `SELECT waiter_id, first_name, last_name, orders_count, total_revenue, avg_check FROM view_waiter_performance ORDER BY total_revenue DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -497,7 +503,7 @@ func (r *Repository) GetWaiterPerformance(ctx context.Context) ([]domain.WaiterP
 	for rows.Next() {
 		var wp domain.WaiterPerformance
 		var avg sql.NullFloat64
-		if err := rows.Scan(&wp.WaiterID, &wp.FullName, &wp.OrdersCount, &wp.TotalRevenue, &avg); err != nil {
+		if err := rows.Scan(&wp.WaiterID, &wp.FirstName, &wp.LastName, &wp.OrdersCount, &wp.TotalRevenue, &avg); err != nil {
 			return nil, err
 		}
 		if avg.Valid {
@@ -995,9 +1001,12 @@ LIMIT $1`, limit)
 func (r *Repository) GetCustomerTotalSpent(ctx context.Context, customerID int64) (domain.CustomerTotalSpent, error) {
 	var res domain.CustomerTotalSpent
 	if err := r.DB.QueryRowContext(ctx, `
-SELECT c.id, c.full_name, get_customer_total_spent(c.id)
+SELECT c.id,
+       c.first_name,
+       c.last_name,
+       get_customer_total_spent(c.id)
 FROM customers c
-WHERE c.id = $1`, customerID).Scan(&res.CustomerID, &res.FullName, &res.TotalSpent); err != nil {
+WHERE c.id = $1`, customerID).Scan(&res.CustomerID, &res.FirstName, &res.LastName, &res.TotalSpent); err != nil {
 		return res, err
 	}
 	return res, nil
